@@ -58,8 +58,8 @@ void TrophyUI::Draw() {
         } else {
             // placeholder
             const auto pos = GetCursorScreenPos();
-            ImGui::GetWindowDrawList()->AddRectFilled(pos, pos + ImVec2{0.0f},
-                                                      GetColorU32(ImVec4{0.0f}));
+            ImGui::GetWindowDrawList()->AddRectFilled(pos, pos + ImVec2{50.0f},
+                                                      GetColorU32(ImVec4{0.7f}));
             ImGui::Indent(60);
         }
         TextWrapped("Trophy earned!\n%s", trophy_name.c_str());
