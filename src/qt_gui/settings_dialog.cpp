@@ -291,7 +291,8 @@ void SettingsDialog::LoadValuesFromConfig() {
             updateChannel = "Release";
         } else {
             updateChannel = "Nightly";
-        } else {
+        }
+        else {
             updateChannel = "PGO";
         }
     }

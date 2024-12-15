@@ -56,9 +56,11 @@ void CheckUpdate::CheckForUpdates(const bool showMessage) {
             checkName = false;
         } else {
             if (Common::isRelease) {
-                Config::setUpdateChannel("Release");
-            } else {
-                Config::setUpdateChannel("Nightly");
+                updateChannel = toml::find_or<std::string>(general, "updateChannel", "Release");
+            } else if (!Common::isRelease) { // Non-release builds
+                updateChannel = toml::find_or<std::string>(general, "updateChannel", "Nightly");
+            } else { // Fallback to PGO if neither applies
+                updateChannel = toml::find_or<std::string>(general, "updateChannel", "PGO");
             }
             const auto config_dir = Common::FS::GetUserPath(Common::FS::PathType::UserDir);
             Config::save(config_dir / "config.toml");
