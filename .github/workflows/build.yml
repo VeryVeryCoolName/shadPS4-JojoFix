@@ -37,7 +37,7 @@ jobs:
       env:
         COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
       run: ./.ci/clang-format.sh
-
+      
   get-info:
     runs-on: ubuntu-latest
     outputs:
@@ -55,13 +55,11 @@ jobs:
         echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
         echo "shorthash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         echo "fullhash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
   windows-sdl:
     runs-on: windows-latest
     needs: get-info
     steps:
-    - name: Upgrade LLVM to 19
-      run: |
-        choco upgrade llvm --version=19.1.5 -y
 
     - uses: actions/checkout@v4
       with:
@@ -77,6 +75,7 @@ jobs:
           key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
           restore-keys: |
             ${{ env.cache-name }}-
+
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.14
       env:
@@ -91,7 +90,7 @@ jobs:
         arch: amd64
 
     - name: Configure CMake
-      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_LTO=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DENABLE_LTO=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $env:NUMBER_OF_PROCESSORS
@@ -106,9 +105,6 @@ jobs:
     runs-on: windows-latest
     needs: get-info
     steps:
-    - name: Upgrade LLVM to 19
-      run: |
-        choco upgrade llvm --version=19.1.5 -y
 
     - uses: actions/checkout@v4
       with:
@@ -134,6 +130,7 @@ jobs:
           key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
           restore-keys: |
             ${{ env.cache-name }}-
+
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.14
       env:
@@ -148,7 +145,7 @@ jobs:
         arch: amd64
 
     - name: Configure CMake
-      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_PGO=ON -DENABLE_QT_GUI=ON -DENABLE_UPDATER=ON -DENABLE_LTO=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_QT_GUI=ON -DENABLE_UPDATER=ON -DENABLE_LTO=ON -DENABLE_PGO=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $env:NUMBER_OF_PROCESSORS
@@ -159,6 +156,7 @@ jobs:
         move build/shadPS4.exe upload
         windeployqt --no-compiler-runtime --no-system-d3d-compiler --no-system-dxc-compiler --dir upload upload/shadPS4.exe
         Compress-Archive -Path upload/* -DestinationPath shadps4-win64-qt-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}.zip
+
     - name: Upload Windows Qt artifact
       uses: actions/upload-artifact@v4
       with:
@@ -178,10 +176,6 @@ jobs:
       with:
         xcode-version: latest
 
-    - name: Install MoltenVK
-      run: |
-        arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        arch -x86_64 /usr/local/bin/brew install molten-vk
     - name: Cache CMake Configuration
       uses: actions/cache@v4 
       env: 
@@ -192,6 +186,7 @@ jobs:
           key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }} 
           restore-keys: | 
             ${{ env.cache-name }}- 
+
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.14
       env:
@@ -203,7 +198,7 @@ jobs:
         variant: sccache
 
     - name: Configure CMake
-      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(sysctl -n hw.ncpu)
@@ -212,7 +207,7 @@ jobs:
       run: |
         mkdir upload
         mv ${{github.workspace}}/build/shadps4 upload
-        cp $(arch -x86_64 /usr/local/bin/brew --prefix)/opt/molten-vk/lib/libMoltenVK.dylib upload
+        cp ${{github.workspace}}/build/externals/MoltenVK/libMoltenVK.dylib upload
         tar cf shadps4-macos-sdl.tar.gz -C upload .
     - uses: actions/upload-artifact@v4
       with:
@@ -232,11 +227,8 @@ jobs:
       with:
         xcode-version: latest
 
-    - name: Install MoltenVK and Setup Qt
-      run: |
-        arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        arch -x86_64 /usr/local/bin/brew install molten-vk
-    - uses: jurplel/install-qt-action@v4
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v4
       with:
         version: 6.7.3
         host: mac
@@ -244,7 +236,7 @@ jobs:
         arch: clang_64
         archives: qtbase qttools
         modules: qtmultimedia
-
+        
     - name: Cache CMake Configuration
       uses: actions/cache@v4 
       env: 
@@ -255,6 +247,7 @@ jobs:
           key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }} 
           restore-keys: | 
             ${{ env.cache-name }}- 
+
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.14
       env:
@@ -266,7 +259,7 @@ jobs:
         variant: sccache
 
     - name: Configure CMake
-      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DENABLE_PGO=ON -DENABLE_QT_GUI=ON -DENABLE_UPDATER=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_OSX_ARCHITECTURES=x86_64 -DENABLE_QT_GUI=ON -DENABLE_UPDATER=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(sysctl -n hw.ncpu)
@@ -303,6 +296,7 @@ jobs:
           key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }} 
           restore-keys: | 
             ${{ env.cache-name }}- 
+
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.14
       env:
@@ -312,10 +306,10 @@ jobs:
         key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
 
     - name: Configure CMake
-      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel3
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(nproc)
   
     - name: Package and Upload Linux(ubuntu64) SDL artifact 
       run: |
@@ -328,7 +322,7 @@ jobs:
 
     - name: Run AppImage packaging script
       run:  ./.github/linux-appimage-sdl.sh
-
+      
     - name: Package and Upload Linux SDL artifact
       run: |
         tar cf shadps4-linux-sdl.tar.gz -C ${{github.workspace}}/build shadps4
@@ -358,6 +352,7 @@ jobs:
           key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }} 
           restore-keys: | 
             ${{ env.cache-name }}- 
+
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.14
       env:
@@ -367,7 +362,7 @@ jobs:
         key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
 
     - name: Configure CMake
-      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_QT_GUI=ON -DENABLE_PGO=ON -DENABLE_UPDATER=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_QT_GUI=ON -DENABLE_LTO=ON -DENABLE_UPDATER=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(nproc)
@@ -404,9 +399,9 @@ jobs:
         path: shadps4.flatpak
         name: shadps4-linux-flatpak-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}
         
-  pre-release:
-    if: github.ref == 'refs/heads/mainBB' && github.event_name == 'push'
-    needs: [get-info, windows-sdl, windows-qt, macos-sdl, macos-qt, linux-sdl, linux-qt, linux-flatpak,]
+  PGO:
+    if: github.ref == 'refs/heads/PgoBB' && github.event_name == 'push'
+    needs: [get-info, windows-sdl, windows-qt, macos-sdl, macos-qt, linux-sdl, linux-qt]
     runs-on: ubuntu-latest
     steps:
     - name: Download all artifacts
@@ -425,8 +420,8 @@ jobs:
           fi
         done
   
-    - name: Get Pre-release information
-      id: get_Pre-release
+    - name: Get PGO information
+      id: get_PGO
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
       run: |
@@ -434,20 +429,20 @@ jobs:
         latest_release_info=$(curl -H "Authorization: token $GITHUB_TOKEN" "$api_url/releases/latest")
         echo "last_release_tag=$(echo "$latest_release_info" | jq -r '.tag_name')" >> $GITHUB_ENV
 
-    - name: Create Pre-Release on GitHub
-      id: create_Pre-release
+    - name: Create PGO on GitHub
+      id: create_PGO
       uses: ncipollo/release-action@v1
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
       with:
-        name: "Pre-release-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}"
-        tag: "Pre-release-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}"
+        name: "PGO-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}"
+        tag: "PGO-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}"
         draft: false
-        prerelease: true
+        prerelease: false
         body: "Full Changelog: [${{ env.last_release_tag }}...${{ needs.get-info.outputs.shorthash }}](https://github.com/diegolix29/shadPS4/compare/${{ env.last_release_tag }}...${{ needs.get-info.outputs.shorthash }})"
         artifacts: ./artifacts/*.zip
          
-    - name: Get current pre-release information
+    - name: Get current PGO information
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
       run: |
@@ -456,7 +451,7 @@ jobs:
         # Get all releases (sorted by date)
         releases=$(curl -H "Authorization: token $GITHUB_TOKEN" "$api_url")
         
-        # Capture the most recent pre-release (assuming the first one is the latest)
+        # Capture the most recent PGO (assuming the first one is the latest)
         current_release=$(echo "$releases" | jq -c '.[] | select(.prerelease == true) | .published_at' | sort -r | head -n 1)
         
         # Remove extra quotes from captured date
@@ -465,13 +460,13 @@ jobs:
         # Export the current published_at to be available for the next step
         echo "CURRENT_PUBLISHED_AT=$current_release" >> $GITHUB_ENV
     
-    - name: Delete old pre-releases and tags
+    - name: Delete old PGOs and tags
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
       run: |
         api_url="https://api.github.com/repos/${{ github.repository }}/releases"
         
-        # Get current pre-releases
+        # Get current PGOs
         releases=$(curl -H "Authorization: token $GITHUB_TOKEN" "$api_url")
                 
         # Remove extra quotes from captured date
@@ -480,7 +475,7 @@ jobs:
         # Convert CURRENT_PUBLISHED_AT para timestamp Unix
         current_published_ts=$(date -d "$CURRENT_PUBLISHED_AT" +%s)
         
-        # Identify pre-releases
+        # Identify PGOs
         echo "$releases" | jq -c '.[] | select(.prerelease == true)' | while read -r release; do
           release_date=$(echo "$release" | jq -r '.published_at')
           release_id=$(echo "$release" | jq -r '.id')
@@ -492,14 +487,14 @@ jobs:
           # Convert release_date para timestamp Unix
           release_date_ts=$(date -d "$release_date" +%s)
                     
-          # Compare timestamps and delete old pre-releases
+          # Compare timestamps and delete old PGOs
           if [[ "$release_date_ts" -lt "$current_published_ts" ]]; then
-            echo "Deleting old pre-release: $release_id from $release_date with tag: $release_tag"
-            # Delete the pre-release
+            echo "Deleting old PGO: $release_id from $release_date with tag: $release_tag"
+            # Delete the PGO
             curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" "$api_url/$release_id"
             # Delete the tag
             curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/$release_tag"
           else
-            echo "Skipping pre-release: $release_id (newer or same date)"
+            echo "Skipping PGO: $release_id (newer or same date)"
           fi
         done
