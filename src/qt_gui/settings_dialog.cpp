@@ -289,10 +289,9 @@ void SettingsDialog::LoadValuesFromConfig() {
     if (updateChannel != "Release" && updateChannel != "Nightly" && updateChannel != "PGO") {
         if (Common::isRelease) {
             updateChannel = "Release";
-        } else {
+        } else if {
             updateChannel = "Nightly";
-        }
-        else {
+        } else {
             updateChannel = "PGO";
         }
     }
