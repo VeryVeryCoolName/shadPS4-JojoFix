@@ -289,9 +289,9 @@ void SettingsDialog::LoadValuesFromConfig() {
     if (updateChannel != "Release" && updateChannel != "Nightly" && updateChannel != "PGO") {
         if (Common::isRelease) {
             updateChannel = "Release";
-        } else if {
+        } else if (!Common::isRelease) { // Non-release builds
             updateChannel = "Nightly";
-        } else {
+        } else { // Fallback to PGO if neither applies
             updateChannel = "PGO";
         }
     }
