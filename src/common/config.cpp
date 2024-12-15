@@ -754,11 +754,11 @@ void setDefaultValues() {
     logType = "async";
     userName = "shadPS4";
     if (Common::isRelease) {
-        updateChannel =  "Release";
+        updateChannel = "Release";
     } else if (!Common::isRelease) { // Non-release builds
-        updateChannel =  "Nightly";
+        updateChannel = "Nightly";
     } else { // Fallback to PGO if neither applies
-        updateChannel =  "PGO";
+        updateChannel = "PGO";
     }
     cursorState = HideCursorState::Idle;
     cursorHideTimeout = 5;
