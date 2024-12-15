@@ -51,6 +51,9 @@ void CheckUpdate::CheckForUpdates(const bool showMessage) {
         } else if (updateChannel == "Release") {
             url = QUrl("https://api.github.com/repos/diegolix29/shadPS4/releases/latest");
             checkName = false;
+        } else if (updateChannel == "PGO") {
+            url = QUrl("https://api.github.com/repos/diegolix29/shadPS4/releases/channel=pgo");
+            checkName = false;
         } else {
             if (Common::isRelease) {
                 Config::setUpdateChannel("Release");
