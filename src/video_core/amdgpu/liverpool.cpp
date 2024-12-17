@@ -96,9 +96,6 @@ void Liverpool::Process(std::stop_token stoken) {
             if (task.done()) {
                 task.destroy();
 
-                if (rasterizer) {
-                    rasterizer->Flush();
-                }
                 std::scoped_lock lock{queue.m_access};
                 queue.submits.pop();
 
@@ -106,6 +103,10 @@ void Liverpool::Process(std::stop_token stoken) {
                 std::scoped_lock lock2{submit_mutex};
                 submit_cv.notify_all();
             }
+        }
+
+        if (rasterizer) {
+            rasterizer->Flush();
         }
 
         if (submit_done) {
