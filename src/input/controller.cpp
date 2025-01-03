@@ -8,9 +8,8 @@
 #include "controller.h"
 
 #include <SDL3/SDL.h>
-#include "common/config.h"
-#include "common/logging/log.h"
 #include "common/assert.h"
+#include "common/logging/log.h"
 #include "common/path_util.h"
 #include "core/libraries/kernel/time.h"
 #include "core/libraries/pad/pad.h"
