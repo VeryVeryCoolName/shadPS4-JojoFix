@@ -14,6 +14,7 @@ public:
     void unlock() {
         pthread_mutex_unlock(&mutex);
     }
+
 private:
     pthread_mutex_t mutex = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP;
 };
