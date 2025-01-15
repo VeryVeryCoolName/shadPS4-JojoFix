@@ -338,6 +338,7 @@ void setVblankDiv(u32 value) {
 void setPostProcessingFilter(const std::string& type) {
     ppFilter = type;
 }
+
 void setIsFullscreen(bool enable) {
     isFullscreen = enable;
 }
@@ -969,4 +970,5 @@ std::filesystem::path GetFoolproofKbmConfigFile(const std::string& game_id) {
     }
     return config_file;
 }
+
 } // namespace Config
