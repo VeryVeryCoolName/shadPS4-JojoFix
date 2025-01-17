@@ -33,6 +33,7 @@ static std::deque<std::pair<bool, ImGui::Layer*>> change_layers{};
 static std::mutex change_layers_mutex{};
 
 static ImGuiID dock_id;
+static ImGuiID game_window_id = 1054440878;
 
 namespace ImGui {
 
@@ -148,7 +149,7 @@ bool ProcessEvent(SDL_Event* event) {
     case SDL_EVENT_MOUSE_BUTTON_DOWN: {
         const auto& io = GetIO();
         return io.WantCaptureMouse && io.Ctx->NavWindow != nullptr &&
-               io.Ctx->NavWindow->ID != dock_id;
+               (io.Ctx->NavWindow->Flags & ImGuiWindowFlags_NoNav) == 0;
     }
     case SDL_EVENT_TEXT_INPUT:
     case SDL_EVENT_KEY_DOWN: {
@@ -186,8 +187,7 @@ ImGuiID NewFrame(bool is_reusing_frame) {
     Sdl::NewFrame(is_reusing_frame);
     ImGui::NewFrame();
 
-    ImGuiWindowFlags flags =
-        ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar;
+    ImGuiWindowFlags flags = ImGuiDockNodeFlags_PassthruCentralNode;
     if (!DebugState.IsShowingDebugMenuBar()) {
         flags |= ImGuiDockNodeFlags_NoTabBar;
     }
