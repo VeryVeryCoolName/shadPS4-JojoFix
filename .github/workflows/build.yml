@@ -61,6 +61,10 @@ jobs:
     runs-on: windows-2025
     needs: get-info
     steps:
+    - name: Upgrade LLVM to 19
+      run: |
+        choco upgrade llvm --version=19.1.5 -y
+
     - uses: actions/checkout@v4
       with:
         submodules: recursive
@@ -90,7 +94,7 @@ jobs:
         arch: amd64
 
     - name: Configure CMake
-      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DENABLE_LTO=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $env:NUMBER_OF_PROCESSORS
@@ -105,6 +109,10 @@ jobs:
     runs-on: windows-2025
     needs: get-info
     steps:
+    - name: Upgrade LLVM to 19
+      run: |
+        choco upgrade llvm --version=19.1.5 -y
+
     - uses: actions/checkout@v4
       with:
         submodules: recursive
@@ -144,7 +152,7 @@ jobs:
         arch: amd64
 
     - name: Configure CMake
-      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_QT_GUI=ON -DENABLE_UPDATER=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_QT_GUI=ON -DENABLE_UPDATER=ON -DENABLE_LTO=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $env:NUMBER_OF_PROCESSORS
@@ -361,7 +369,7 @@ jobs:
         key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
 
     - name: Configure CMake
-      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_QT_GUI=ON -DENABLE_UPDATER=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_QT_GUI=ON -DENABLE_LTO=ON -DENABLE_UPDATER=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(nproc)
@@ -384,10 +392,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-
     - name: Install dependencies
       run: sudo apt-get update && sudo apt install -y libx11-dev libxext-dev libwayland-dev libdecor-0-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev libfuse2 gcc-14 build-essential libasound2-dev libpulse-dev libopenal-dev libudev-dev
-
     - name: Cache CMake Configuration
       uses: actions/cache@v4 
       env: 
@@ -398,7 +404,6 @@ jobs:
           key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }} 
           restore-keys: | 
             ${{ env.cache-name }}- 
-
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.14
       env:
@@ -406,13 +411,10 @@ jobs:
       with:
         append-timestamp: false
         key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
-
     - name: Configure CMake
       run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(nproc)
-
   linux-qt-gcc:
     runs-on: ubuntu-24.04
     needs: get-info
@@ -420,10 +422,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-
     - name: Install dependencies
       run: sudo apt-get update && sudo apt install -y libx11-dev libxext-dev libwayland-dev libdecor-0-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev libfuse2 gcc-14 build-essential qt6-base-dev qt6-tools-dev qt6-multimedia-dev libasound2-dev libpulse-dev libopenal-dev libudev-dev
-
     - name: Cache CMake Configuration
       uses: actions/cache@v4 
       env: 
@@ -434,7 +434,6 @@ jobs:
           key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }} 
           restore-keys: | 
             ${{ env.cache-name }}- 
-
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.14
       env:
@@ -442,16 +441,35 @@ jobs:
       with:
         append-timestamp: false
         key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
-
     - name: Configure CMake
       run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14 -DENABLE_QT_GUI=ON -DENABLE_UPDATER=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(nproc)
-
-  pre-release:
-    if: github.ref == 'refs/heads/main' && github.repository == 'shadps4-emu/shadPS4' && github.event_name == 'push'
-    needs: [get-info, windows-sdl, windows-qt, macos-sdl, macos-qt, linux-sdl, linux-qt]
+      
+  linux-flatpak:
+    runs-on: ubuntu-24.04
+    needs: get-info
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:kde-6.7
+      options: --privileged
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - uses: flatpak/flatpak-github-actions/flatpak-builder@master
+      with:
+        manifest-path: net.shadps4.shadPS4.yaml
+        cache-key: flatpak-builder-${{ github.sha }}
+        bundle: shadps4.flatpak
+        upload-artifact: false
+    - uses: actions/upload-artifact@v4
+      with:
+        path: shadps4.flatpak
+        name: shadps4-linux-flatpak-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}
+        
+  PRTBB:
+    if: github.ref == 'refs/heads/PRTBB' && github.event_name == 'push'
+    needs: [get-info, windows-sdl, windows-qt, macos-sdl, macos-qt, linux-sdl, linux-qt, linux-qt-gcc, linux-sdl-gcc]
     runs-on: ubuntu-latest
     steps:
     - name: Download all artifacts
@@ -470,8 +488,8 @@ jobs:
           fi
         done
   
-    - name: Get latest release information
-      id: get_latest_release
+    - name: Get PRTBB information
+      id: get_PRTBB
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
       run: |
@@ -479,72 +497,20 @@ jobs:
         latest_release_info=$(curl -H "Authorization: token $GITHUB_TOKEN" "$api_url/releases/latest")
         echo "last_release_tag=$(echo "$latest_release_info" | jq -r '.tag_name')" >> $GITHUB_ENV
 
-    - name: Create Pre-Release on GitHub
-      id: create_release
+    - name: Create PRTBB on GitHub
+      id: create_PRTBB
       uses: ncipollo/release-action@v1
-      with:
-        token: ${{ secrets.SHADPS4_TOKEN_REPO }}
-        name: "Pre-release-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}"
-        tag: "Pre-release-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}"
-        draft: false
-        prerelease: true
-        body: "Full Changelog: [${{ env.last_release_tag }}...${{ needs.get-info.outputs.shorthash }}](https://github.com/shadps4-emu/shadPS4/compare/${{ env.last_release_tag }}...${{ needs.get-info.outputs.fullhash }})"
-        artifacts: ./artifacts/*.zip
-
-    - name: Publish to Release Repository
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
-      run: |
-        ARTIFACTS_DIR=./artifacts
-        REPO_WINDOWS="shadps4-emu/shadps4-binaries-Windows"
-        REPO_LINUX="shadps4-emu/shadps4-binaries-Linux"
-        REPO_MAC="shadps4-emu/shadps4-binaries-Mac"
-
-        for file in "$ARTIFACTS_DIR"/*.zip; do
-          filename=$(basename "$file")
-          REPO=""
-
-          # Determine repository based on file name
-          if [[ "$filename" == *"win64"* ]]; then
-            REPO=$REPO_WINDOWS
-          elif [[ "$filename" == *"linux"* ]] || [[ "$filename" == *"ubuntu64"* ]]; then
-            REPO=$REPO_LINUX
-          elif [[ "$filename" == *"macos"* ]]; then
-            REPO=$REPO_MAC
-          fi
-
-          # If REPO is empty, skip file
-          if [[ -z "$REPO" ]]; then
-            echo "No matching repository for $filename"
-            continue
-          fi
-
-          # Check if release already exists and get ID
-          release_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/$REPO/releases/tags/Pre-release-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}" | jq -r '.id')
-
-          if [[ "$release_id" == "null" ]]; then
-            echo "Creating release in $REPO for $filename"
-            release_id=$(curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github.v3+json" \
-              -d '{
-                "tag_name": "Pre-release-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}",
-                "name": "Pre-release-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}",
-                "draft": false,
-                "prerelease": true,
-                "body": "Commit: [${{ needs.get-info.outputs.fullhash }}](https://github.com/shadps4-emu/shadPS4/commit/${{ needs.get-info.outputs.fullhash }})"
-              }' "https://api.github.com/repos/$REPO/releases" | jq -r '.id')
-          else
-            echo "Release already exists in $REPO with ID $release_id"
-          fi
-
-          # Artifact upload
-          echo "Uploading $filename to release $release_id in $REPO"
-          upload_url="https://uploads.github.com/repos/$REPO/releases/$release_id/assets?name=$filename"
-          curl -X POST -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/octet-stream" --data-binary @"$file" "$upload_url"
-        done
-        
-    - name: Get current pre-release information
+      with:
+        name: "PRTBB-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}"
+        tag: "PRTBB-shadPS4-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}"
+        draft: false
+        PRTBB: true
+        body: "Full Changelog: [${{ env.last_release_tag }}...${{ needs.get-info.outputs.shorthash }}](https://github.com/diegolix29/shadPS4/compare/${{ env.last_release_tag }}...${{ needs.get-info.outputs.shorthash }})"
+        artifacts: ./artifacts/*.zip
+         
+    - name: Get current PRTBB information
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
       run: |
@@ -553,8 +519,8 @@ jobs:
         # Get all releases (sorted by date)
         releases=$(curl -H "Authorization: token $GITHUB_TOKEN" "$api_url")
         
-        # Capture the most recent pre-release (assuming the first one is the latest)
-        current_release=$(echo "$releases" | jq -c '.[] | select(.prerelease == true) | .published_at' | sort -r | head -n 1)
+        # Capture the most recent PRTBB (assuming the first one is the latest)
+        current_release=$(echo "$releases" | jq -c '.[] | select(.PRTBB == true) | .published_at' | sort -r | head -n 1)
         
         # Remove extra quotes from captured date
         current_release=$(echo $current_release | tr -d '"')
@@ -562,13 +528,13 @@ jobs:
         # Export the current published_at to be available for the next step
         echo "CURRENT_PUBLISHED_AT=$current_release" >> $GITHUB_ENV
     
-    - name: Delete old pre-releases and tags
+    - name: Delete old PRTBBs and tags
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
       run: |
         api_url="https://api.github.com/repos/${{ github.repository }}/releases"
         
-        # Get current pre-releases
+        # Get current PRTBBs
         releases=$(curl -H "Authorization: token $GITHUB_TOKEN" "$api_url")
                 
         # Remove extra quotes from captured date
@@ -577,8 +543,8 @@ jobs:
         # Convert CURRENT_PUBLISHED_AT para timestamp Unix
         current_published_ts=$(date -d "$CURRENT_PUBLISHED_AT" +%s)
         
-        # Identify pre-releases
-        echo "$releases" | jq -c '.[] | select(.prerelease == true)' | while read -r release; do
+        # Identify PRTBBs
+        echo "$releases" | jq -c '.[] | select(.PRTBB == true)' | while read -r release; do
           release_date=$(echo "$release" | jq -r '.published_at')
           release_id=$(echo "$release" | jq -r '.id')
           release_tag=$(echo "$release" | jq -r '.tag_name')
@@ -589,14 +555,14 @@ jobs:
           # Convert release_date para timestamp Unix
           release_date_ts=$(date -d "$release_date" +%s)
                     
-          # Compare timestamps and delete old pre-releases
+          # Compare timestamps and delete old PRTBBs
           if [[ "$release_date_ts" -lt "$current_published_ts" ]]; then
-            echo "Deleting old pre-release: $release_id from $release_date with tag: $release_tag"
-            # Delete the pre-release
+            echo "Deleting old PRTBB: $release_id from $release_date with tag: $release_tag"
+            # Delete the PRTBB
             curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" "$api_url/$release_id"
             # Delete the tag
             curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/$release_tag"
           else
-            echo "Skipping pre-release: $release_id (newer or same date)"
+            echo "Skipping PRTBB: $release_id (newer or same date)"
           fi
         done
